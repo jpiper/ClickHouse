@@ -21,7 +21,8 @@ public:
 
     MutableColumnPtr cloneResized(size_t size) const override
     {
-        return ColumnWithDictionary::create(column_unique, indexes->cloneResized(size));
+        auto unique_ptr = column_unique;
+        return ColumnWithDictionary::create((*std::move(unique_ptr).mutate(), indexes->cloneResized(size));
     }
 
     size_t size() const override { return indexes->size(); }
@@ -156,7 +157,7 @@ public:
     void gather(ColumnGathererStream & gatherer_stream) override ;
     void getExtremes(Field & min, Field & max) const override { return column_unique->getExtremes(min, max); }
 
-    void reserve(size_t n) override { indexes->reserve(n); }
+    void reserve(size_t n) override { getIndexes()->reserve(n); }
 
     size_t byteSize() const override { return indexes->byteSize() + column_unique->byteSize(); }
     size_t allocatedBytes() const override { return indexes->allocatedBytes() + column_unique->allocatedBytes(); }

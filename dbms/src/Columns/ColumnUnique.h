@@ -142,7 +142,7 @@ IndexType ColumnUnique<ColumnType, IndexType>::insert(const StringRefWrapper & r
     if (!index)
         buildIndex();
 
-    using IteratorType = IndexMapType::iterator;
+    using IteratorType = typename IndexMapType::iterator;
     IteratorType it;
     bool inserted;
     index->emplace(ref, it, inserted);

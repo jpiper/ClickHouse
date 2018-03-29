@@ -46,12 +46,12 @@ public:
     StringRef serializeValueIntoArena(size_t n, Arena & arena, char const *& begin) const override { return column_holder->serializeValueIntoArena(n, arena, begin); }
     const char * deserializeAndInsertFromArena(const char * pos) override { return column_holder->deserializeAndInsertFromArena(pos); }
     void updateHashWithValue(size_t n, SipHash & hash) const override { return column_holder->updateHashWithValue(n, hash); }
-    MutableColumnPtr filter(const Filter & filt, ssize_t result_size_hint) const override { return column_holder->filter(filt, result_size_hint); }
-    MutableColumnPtr permute(const Permutation & perm, size_t limit) const override { return column_holder->permute(perm, limit); }
+    MutableColumnPtr filter(const IColumn::Filter & filt, ssize_t result_size_hint) const override { return column_holder->filter(filt, result_size_hint); }
+    MutableColumnPtr permute(const IColumn::Permutation & perm, size_t limit) const override { return column_holder->permute(perm, limit); }
     int compareAt(size_t n, size_t m, const IColumn & rhs, int nan_direction_hint) const override { column_holder->compareAt(n, m, rhs, nan_direction_hint); }
     void getPermutation(bool reverse, size_t limit, int nan_direction_hint, Permutation & res) const override { column_holder->getPermutation(reverse, limit, nan_direction_hint, res); }
-    MutableColumnPtr replicate(const Offsets & offsets) const override { return column_holder->replicate(offsets); }
-    std::vector<MutableColumnPtr> scatter(ColumnIndex num_columns, const Selector & selector) const override { return column_holder->scatter(num_columns, selector); }
+    MutableColumnPtr replicate(const IColumn::Offsets & offsets) const override { return column_holder->replicate(offsets); }
+    std::vector<MutableColumnPtr> scatter(IColumn::ColumnIndex num_columns, const Selector & selector) const override { return column_holder->scatter(num_columns, selector); }
     void getExtremes(Field & min, Field & max) const override { column_holder->getExtremes(min, max); }
     bool valuesHaveFixedSize() const override { return column_holder->valuesHaveFixedSize(); }
     bool isFixedAndContiguous() const override { return column_holder->isFixedAndContiguous(); }
@@ -60,7 +60,7 @@ public:
 
     size_t byteSize() const override { return column_holder->byteSize(); }
     size_t allocatedBytes() const override { return column_holder->allocatedBytes() + (index ? index->getBufferSizeInBytes() : 0); }
-    void forEachSubcolumn(ColumnCallback callback) override { callback(column_holder); }
+    void forEachSubcolumn(IColumn::ColumnCallback callback) override { callback(column_holder); }
 
 private:
 

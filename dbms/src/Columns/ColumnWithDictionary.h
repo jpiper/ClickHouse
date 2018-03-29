@@ -11,6 +11,8 @@ namespace ErrorCodes
 
 class ColumnWithDictionary final : public COWPtrHelper<IColumn, ColumnWithDictionary>
 {
+    friend class COWPtrHelper<IColumn, ColumnWithDictionary>;
+
     ColumnWithDictionary(MutableColumnPtr && column_unique, MutableColumnPtr && indexes);
     ColumnWithDictionary(const ColumnWithDictionary & other);
 

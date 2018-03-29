@@ -242,7 +242,7 @@ private:
         template <typename T, size_t>
         void operator()()
         {
-            if (typeid_cast<const ColumnVector<T> *>(type))
+            if (typeid_cast<const DataTypeNumber<T> *>(type))
                 column = data_type_with_dictionary->createColumnImpl<ColumnVector<T>>();
         }
     };

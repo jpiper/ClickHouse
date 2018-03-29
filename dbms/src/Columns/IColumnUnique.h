@@ -39,17 +39,17 @@ public:
 
     const char * getFamilyName() const override { return "ColumnUnique"; }
 
-    void insert(const Field & x) override
+    void insert(const Field &) override
     {
         throw Exception("Method insert is not supported for ColumnUnique.", ErrorCodes::NOT_IMPLEMENTED);
     }
 
-    void insertRangeFrom(const IColumn & src, size_t start, size_t length) override
+    void insertRangeFrom(const IColumn &, size_t, size_t) override
     {
         throw Exception("Method insertRangeFrom is not supported for ColumnUnique.", ErrorCodes::NOT_IMPLEMENTED);
     }
 
-    void insertData(const char * pos, size_t length) override
+    void insertData(const char *, size_t) override
     {
         throw Exception("Method insertData is not supported for ColumnUnique.", ErrorCodes::NOT_IMPLEMENTED);
     }
@@ -59,12 +59,12 @@ public:
         throw Exception("Method insertDefault is not supported for ColumnUnique.", ErrorCodes::NOT_IMPLEMENTED);
     }
 
-    void popBack() override
+    void popBack(size_t) override
     {
         throw Exception("Method popBack is not supported for ColumnUnique.", ErrorCodes::NOT_IMPLEMENTED);
     }
 
-    void gather(ColumnGathererStream & gatherer_stream) override
+    void gather(ColumnGathererStream &) override
     {
         throw Exception("Method gather is not supported for ColumnUnique.", ErrorCodes::NOT_IMPLEMENTED);
     }

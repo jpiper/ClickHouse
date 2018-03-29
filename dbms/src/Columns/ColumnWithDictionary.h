@@ -47,30 +47,30 @@ public:
         return ColumnWithDictionary::create(column_unique, indexes->cut(start, length));
     }
 
-    void insert(const Field & x) override { indexes->insert(Field(UInt64(getUnique()->uniqueInsert(x)))); }
-    void insertFrom(const IColumn & src, size_t n) override { indexes->insert(getUnique()->uniqueInsertFrom(src, n)); }
+    void insert(const Field & x) override { getIndexes()->insert(Field(UInt64(getUnique()->uniqueInsert(x)))); }
+    void insertFrom(const IColumn & src, size_t n) override { getIndexes()->insert(getUnique()->uniqueInsertFrom(src, n)); }
     void insertRangeFrom(const IColumn & src, size_t start, size_t length) override
     {
         auto inserted_indexes = getUnique()->uniqueInsertRangeFrom(src, start, length);
-        indexes->insertRangeFrom(*inserted_indexes, 0, length);
+        getIndexes()->insertRangeFrom(*inserted_indexes, 0, length);
     }
 
     void insertData(const char * pos, size_t length) override
     {
-        indexes->insert(Field(UInt64(getUnique()->uniqueInsertData(pos, length))));
+        getIndexes()->insert(Field(UInt64(getUnique()->uniqueInsertData(pos, length))));
     }
 
     void insertDataWithTerminatingZero(const char * pos, size_t length) override
     {
-        indexes->insert(Field(UInt64(getUnique()->uniqueInsertDataWithTerminatingZero(pos, length))));
+        getIndexes()->insert(Field(UInt64(getUnique()->uniqueInsertDataWithTerminatingZero(pos, length))));
     }
 
     void insertDefault() override
     {
-        indexes->insert(getUnique()->getDefaultValueIndex());
+        getIndexes()->insert(getUnique()->getDefaultValueIndex());
     }
 
-    void popBack(size_t n) override { indexes->popBack(n); }
+    void popBack(size_t n) override { getIndexes()->popBack(n); }
 
     StringRef serializeValueIntoArena(size_t n, Arena & arena, char const *& begin) const override
     {
@@ -80,7 +80,7 @@ public:
     const char * deserializeAndInsertFromArena(const char * pos) override
     {
         const char * new_pos;
-        indexes->insert(getUnique()->uniqueDeserializeAndInsertFromArena(pos, new_pos));
+        getIndexes()->insert(getUnique()->uniqueDeserializeAndInsertFromArena(pos, new_pos));
         return new_pos;
     }
 

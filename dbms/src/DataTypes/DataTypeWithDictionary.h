@@ -180,7 +180,7 @@ public:
 
     void deserializeTextCSV(IColumn & column, ReadBuffer & istr, const char delimiter) const override
     {
-        deserializeImpl(column, istr, &IDataType::deserializeTextCSV, delimiter);
+        deserializeImpl<const char>(column, istr, &IDataType::deserializeTextCSV, delimiter);
     }
 
     void serializeText(const IColumn & column, size_t row_num, WriteBuffer & ostr) const override

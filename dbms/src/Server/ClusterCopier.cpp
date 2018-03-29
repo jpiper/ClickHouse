@@ -63,6 +63,7 @@
 #include <Server/StatusFile.h>
 #include <Common/formatReadable.h>
 #include <daemon/OwnPatternFormatter.h>
+#include <Common/DNSCache.h>
 
 
 namespace DB
@@ -607,7 +608,7 @@ static ShardPriority getReplicasPriority(const Cluster::Addresses & replicas, co
     res.is_remote = 1;
     for (auto & replica : replicas)
     {
-        if (isLocalAddress(replica.resolved_address))
+        if (isLocalAddress(DNSCache::instance().resolveHost(replica.host_name)))
         {
             res.is_remote = 0;
             break;

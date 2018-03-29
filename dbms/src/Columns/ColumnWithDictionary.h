@@ -47,7 +47,8 @@ public:
     bool isNullAt(size_t n) const override { return column_unique->isNullAt(indexes->getUInt(n)); }
     MutableColumnPtr cut(size_t start, size_t length) const override
     {
-        return ColumnWithDictionary::create(column_unique, indexes->cut(start, length));
+        auto unique_ptr = column_unique;
+        return ColumnWithDictionary::create(std::move(unique_ptr)->mutate(), indexes->cut(start, length));
     }
 
     void insert(const Field & x) override { getIndexes()->insert(Field(UInt64(getUnique()->uniqueInsert(x)))); }
@@ -151,7 +152,10 @@ public:
     {
         auto columns = indexes->scatter(num_columns, selector);
         for (auto & column : columns)
-            column = ColumnWithDictionary::create(column_unique, column);
+        {
+            auto unique_ptr = column_unique;
+            column = ColumnWithDictionary::create(std::move(unique_ptr)->mutate(), column);
+        }
 
         return columns;
     }

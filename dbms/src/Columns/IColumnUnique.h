@@ -69,6 +69,11 @@ public:
     {
         throw Exception("Method gather is not supported for ColumnUnique.", ErrorCodes::NOT_IMPLEMENTED);
     }
+
+    const char * deserializeAndInsertFromArena(const char *) override
+    {
+        throw Exception("Method deserializeAndInsertFromArena is not supported for ColumnUnique.", ErrorCodes::NOT_IMPLEMENTED);
+    }
 };
 
 }

@@ -44,14 +44,17 @@ public:
     bool isNullAt(size_t n) const override { return column_holder->isNullAt(n); }
     MutableColumnPtr cut(size_t start, size_t length) const override { return column_holder->cut(start, length); }
     StringRef serializeValueIntoArena(size_t n, Arena & arena, char const *& begin) const override { return column_holder->serializeValueIntoArena(n, arena, begin); }
-    const char * deserializeAndInsertFromArena(const char * pos) override { return column_holder->deserializeAndInsertFromArena(pos); }
     void updateHashWithValue(size_t n, SipHash & hash) const override { return column_holder->updateHashWithValue(n, hash); }
     MutableColumnPtr filter(const IColumn::Filter & filt, ssize_t result_size_hint) const override { return column_holder->filter(filt, result_size_hint); }
     MutableColumnPtr permute(const IColumn::Permutation & perm, size_t limit) const override { return column_holder->permute(perm, limit); }
-    int compareAt(size_t n, size_t m, const IColumn & rhs, int nan_direction_hint) const override { column_holder->compareAt(n, m, rhs, nan_direction_hint); }
-    void getPermutation(bool reverse, size_t limit, int nan_direction_hint, Permutation & res) const override { column_holder->getPermutation(reverse, limit, nan_direction_hint, res); }
-    MutableColumnPtr replicate(const IColumn::Offsets & offsets) const override { return column_holder->replicate(offsets); }
-    std::vector<MutableColumnPtr> scatter(IColumn::ColumnIndex num_columns, const Selector & selector) const override { return column_holder->scatter(num_columns, selector); }
+    int compareAt(size_t n, size_t m, const IColumn & rhs, int nan_direction_hint) const override { return column_holder->compareAt(n, m, rhs, nan_direction_hint); }
+    void getPermutation(bool reverse, size_t limit, int nan_direction_hint, IColumn::Permutation & res) const override { column_holder->getPermutation(reverse, limit, nan_direction_hint, res); }
+    MutableColumnPtr replicate(const IColumn::Offsets & offsets) const override
+    {
+        auto holder = column_holder;
+        return std::move(holder)->mutate()->replicate(offsets);
+    }
+    std::vector<MutableColumnPtr> scatter(IColumn::ColumnIndex num_columns, const IColumn::Selector & selector) const override { return column_holder->scatter(num_columns, selector); }
     void getExtremes(Field & min, Field & max) const override { column_holder->getExtremes(min, max); }
     bool valuesHaveFixedSize() const override { return column_holder->valuesHaveFixedSize(); }
     bool isFixedAndContiguous() const override { return column_holder->isFixedAndContiguous(); }
@@ -99,7 +102,7 @@ private:
 };
 
 template <typename ColumnType, typename IndexType>
-ColumnUnique::ColumnUnique(MutableColumnPtr && holder) : column_holder(std::move(holder))
+ColumnUnique<ColumnType, IndexType>::ColumnUnique(MutableColumnPtr && holder) : column_holder(std::move(holder))
 {
     if (column_holder->isColumnNullable())
     {
@@ -110,7 +113,7 @@ ColumnUnique::ColumnUnique(MutableColumnPtr && holder) : column_holder(std::move
 }
 
 template <typename ColumnType, typename IndexType>
-size_t ColumnUnique::getNullValueIndex() const override
+size_t ColumnUnique<ColumnType, IndexType>::getNullValueIndex() const override
 {
     if (!is_nullable)
         throw Exception("ColumnUnique can't contain null values.");
@@ -119,7 +122,7 @@ size_t ColumnUnique::getNullValueIndex() const override
 }
 
 template <typename ColumnType, typename IndexType>
-void ColumnUnique::buildIndex()
+void ColumnUnique<ColumnType, IndexType>::buildIndex()
 {
     if (index)
         return;
@@ -134,7 +137,7 @@ void ColumnUnique::buildIndex()
 }
 
 template <typename ColumnType, typename IndexType>
-IndexType ColumnUnique::insert(const StringRefWrapper & ref, IndexType value)
+IndexType ColumnUnique<ColumnType, IndexType>::insert(const StringRefWrapper & ref, IndexType value)
 {
     if (!index)
         buildIndex();
@@ -150,7 +153,7 @@ IndexType ColumnUnique::insert(const StringRefWrapper & ref, IndexType value)
 }
 
 template <typename ColumnType, typename IndexType>
-size_t ColumnUnique::uniqueInsert(const Field & x) override
+size_t ColumnUnique<ColumnType, IndexType>::uniqueInsert(const Field & x) override
 {
     if (x.getType() == Field::Types::Null)
         return getNullValueIndex();
@@ -170,14 +173,14 @@ size_t ColumnUnique::uniqueInsert(const Field & x) override
 }
 
 template <typename ColumnType, typename IndexType>
-size_t ColumnUnique::uniqueInsertFrom(const IColumn & src, size_t n) override
+size_t ColumnUnique<ColumnType, IndexType>::uniqueInsertFrom(const IColumn & src, size_t n) override
 {
     auto ref = src.getDataAt(n);
     return uniqueInsertData(ref.data, ref.size);
 }
 
 template <typename ColumnType, typename IndexType>
-size_t ColumnUnique::uniqueInsertData(const char * data, size_t length) override
+size_t ColumnUnique<ColumnType, IndexType>::uniqueInsertData(const char * data, size_t length) override
 {
     auto column = getRawColumnPtr();
 
@@ -196,7 +199,7 @@ size_t ColumnUnique::uniqueInsertData(const char * data, size_t length) override
 }
 
 template <typename ColumnType, typename IndexType>
-size_t ColumnUnique::uniqueInsertDataWithTerminatingZero(const char * data, size_t length) override
+size_t ColumnUnique<ColumnType, IndexType>::uniqueInsertDataWithTerminatingZero(const char * data, size_t length) override
 {
     if (std::is_same<ColumnType, ColumnString>::value)
         return uniqueInsertData(data, length - 1);
@@ -224,7 +227,7 @@ size_t ColumnUnique::uniqueInsertDataWithTerminatingZero(const char * data, size
 }
 
 template <typename ColumnType, typename IndexType>
-size_t ColumnUnique::uniqueDeserializeAndInsertFromArena(const char * pos, const char *& new_pos) override
+size_t ColumnUnique<ColumnType, IndexType>::uniqueDeserializeAndInsertFromArena(const char * pos, const char *& new_pos) override
 {
     auto column = getRawColumnPtr();
     size_t prev_size = column->size();
@@ -244,7 +247,7 @@ size_t ColumnUnique::uniqueDeserializeAndInsertFromArena(const char * pos, const
 }
 
 template <typename ColumnType, typename IndexType>
-ColumnPtr ColumnUnique::uniqueInsertRangeFrom(const IColumn & src, size_t start, size_t length) override
+ColumnPtr ColumnUnique<ColumnType, IndexType>::uniqueInsertRangeFrom(const IColumn & src, size_t start, size_t length) override
 {
     if (!index)
         buildIndex();

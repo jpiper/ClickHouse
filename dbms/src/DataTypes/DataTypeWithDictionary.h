@@ -228,6 +228,26 @@ public:
                         ErrorCodes::LOGICAL_ERROR);
     }
 
+private:
+    struct CreateColumnVector
+    {
+        MutableColumnPtr & column;
+        const DataTypeWithDictionary * data_type_with_dictionary;
+        const IDataType * type;
+
+        CreateColumnVector(MutableColumnPtr & column, const DataTypeWithDictionary * data_type_with_dictionary,
+                           const IDataType * type)
+                : column(column), data_type_with_dictionary(data_type_with_dictionary), type(type) {}
+
+        template <typename T, typename>
+        void operator()()
+        {
+            if (typeid_cast<const ColumnVector<T> *>(type))
+                column = data_type_with_dictionary->createColumnImpl<ColumnVector<T>>();
+        }
+    };
+
+public:
     MutableColumnPtr createColumn() const override
     {
         auto type = dictionary_type;
@@ -244,24 +264,6 @@ public:
             return createColumnImpl<ColumnVector<UInt32>>();
         if (type->isNumber())
         {
-            struct CreateColumnVector
-            {
-                MutableColumnPtr & column;
-                const DataTypeWithDictionary * data_type_with_dictionary;
-                const IDataType * type;
-
-                CreateColumnVector(MutableColumnPtr & column, const DataTypeWithDictionary * data_type_with_dictionary,
-                                   const IDataType * type)
-                        : column(column), data_type_with_dictionary(data_type_with_dictionary), type(type) {}
-
-                template <typename T, typename>
-                void operator()()
-                {
-                    if (typeid_cast<const ColumnVector<T> *>(type))
-                        column = data_type_with_dictionary->createColumnImpl<ColumnVector<T>>();
-                }
-            };
-
             MutableColumnPtr column;
             TypeListNumbers::forEach(CreateColumnVector(column, this, dictionary_type.get()));
 

@@ -183,7 +183,7 @@ public:
 
     void deserializeTextCSV(IColumn & column, ReadBuffer & istr, const char delimiter) const override
     {
-        deserializeImpl(column, istr, &IDataType::deserializeTextCSV, std::move(delimiter));
+        deserializeImpl(column, istr, &IDataType::deserializeTextCSV, delimiter + 0);
     }
 
     void serializeText(const IColumn & column, size_t row_num, WriteBuffer & ostr) const override

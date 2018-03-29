@@ -12,9 +12,9 @@ namespace DB
 {
 
 template <typename ColumnType, typename IndexType>
-class ColumnUnique final : public COWPtrHelper<IColumnUnique, ColumnUnique>
+class ColumnUnique final : public COWPtrHelper<IColumnUnique, ColumnUnique<ColumnType, IndexType>>
 {
-    friend class COWPtrHelper<IColumnUnique, ColumnUnique>;
+    friend class COWPtrHelper<IColumnUnique, ColumnUnique<ColumnType, IndexType>>;
 
 private:
     explicit ColumnUnique(MutableColumnPtr && holder);

@@ -9,7 +9,7 @@ class IColumnUnique : public IColumn
 public:
     /// Column always contains Null if it's Nullable and empty string if it's String or Nullable(String).
     /// So, size may be greater than the number of inserted unique values.
-    virtual ColumnPtr getNestedColumn() const = 0;
+    virtual const ColumnPtr & getNestedColumn() const = 0;
     size_t size() const override { return getNestedColumn()->size(); }
 
     /// Appends new value at the end of column (column's size is increased by 1).

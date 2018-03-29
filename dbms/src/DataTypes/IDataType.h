@@ -79,13 +79,16 @@ public:
             NullMap,
 
             TupleElement,
+
+            DictionaryElements,
+            DictionaryIndexes,
         };
         Type type;
 
         /// Index of tuple element, starting at 1.
         String tuple_element_name;
 
-        Substream(Type type) : type(type) {}
+        explicit Substream(Type type) : type(type) {}
     };
 
     using SubstreamPath = std::vector<Substream>;

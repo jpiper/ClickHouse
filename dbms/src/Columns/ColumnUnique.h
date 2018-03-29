@@ -16,12 +16,12 @@ class ColumnUnique final : public COWPtrHelper<IColumnUnique, ColumnUnique>
     friend class COWPtrHelper<IColumnUnique, ColumnUnique>;
 
 private:
-    explicit ColumnUnique(const ColumnPtr & holder);
+    explicit ColumnUnique(MutableColumnPtr && holder);
     explicit ColumnUnique(bool is_nullable) : column_holder(ColumnType::create(numSpecialValues())), is_nullable(is_nullable) {}
     ColumnUnique(const ColumnUnique & other) : column_holder(other.column_holder), is_nullable(other.is_nullable) {}
 
 public:
-    ColumnPtr getNestedColumn() const override { return column_holder; }
+    const ColumnPtr & getNestedColumn() const override { return column_holder; }
     size_t uniqueInsert(const Field & x) override;
     size_t uniqueInsertFrom(const IColumn & src, size_t n) override;
     ColumnPtr uniqueInsertRangeFrom(const IColumn & src, size_t start, size_t length) override;
@@ -98,7 +98,7 @@ private:
 };
 
 template <typename ColumnType, typename IndexType>
-ColumnUnique::ColumnUnique(const ColumnPtr & holder) : column_holder(holder)
+ColumnUnique::ColumnUnique(MutableColumnPtr && holder) : column_holder(std::move(holder))
 {
     if (column_holder->isColumnNullable())
     {

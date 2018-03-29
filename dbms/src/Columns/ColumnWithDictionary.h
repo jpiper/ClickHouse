@@ -11,8 +11,9 @@ namespace ErrorCodes
 
 class ColumnWithDictionary final : public COWPtrHelper<IColumn, ColumnWithDictionary>
 {
-    ColumnWithDictionary(const ColumnPtr & column_unique, const ColumnPtr & indexes);
+    ColumnWithDictionary(MutableColumnPtr && column_unique, MutableColumnPtr && indexes);
     ColumnWithDictionary(const ColumnWithDictionary & other);
+
 public:
     std::string getName() const override { return "ColumnWithDictionary"; }
     const char * getFamilyName() const override { return "ColumnWithDictionary"; }
@@ -171,12 +172,18 @@ public:
     size_t sizeOfValueIfFixed() const override { return column_unique->sizeOfValueIfFixed(); }
     bool isNumeric() const override { return column_unique->isNumeric(); }
 
+    IColumnUnique * getUnique() { return static_cast<IColumnUnique *>(column_unique->assumeMutable().get()); }
+    const IColumnUnique * getUnique() const { return static_cast<const IColumnUnique *>(column_unique->assumeMutable().get()); }
+    ColumnPtr getUniquePtr() const { return column_unique; }
+
+    IColumn * getIndexes() { return indexes->assumeMutable().get(); }
+    const IColumn * getIndexes() const { return indexes.get(); }
+    ColumnPtr getIndexesPtr() const { return indexes; }
+
 private:
     ColumnPtr column_unique;
     ColumnPtr indexes;
 
-    IColumnUnique * getUnique() { return static_cast<IColumnUnique *>(column_unique->assumeMutable().get()); }
-    const IColumnUnique * getUnique() const { return static_cast<const IColumnUnique *>(column_unique->assumeMutable().get()); }
 };
 
 

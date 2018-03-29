@@ -113,7 +113,7 @@ ColumnUnique<ColumnType, IndexType>::ColumnUnique(MutableColumnPtr && holder) : 
 }
 
 template <typename ColumnType, typename IndexType>
-size_t ColumnUnique<ColumnType, IndexType>::getNullValueIndex() const override
+size_t ColumnUnique<ColumnType, IndexType>::getNullValueIndex() const
 {
     if (!is_nullable)
         throw Exception("ColumnUnique can't contain null values.");
@@ -142,7 +142,7 @@ IndexType ColumnUnique<ColumnType, IndexType>::insert(const StringRefWrapper & r
     if (!index)
         buildIndex();
 
-    IndexType::iterator it;
+    IndexMapType::iterator it;
     bool inserted;
     index->emplace(ref, it, inserted);
 

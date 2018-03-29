@@ -153,7 +153,7 @@ IndexType ColumnUnique<ColumnType, IndexType>::insert(const StringRefWrapper & r
 }
 
 template <typename ColumnType, typename IndexType>
-size_t ColumnUnique<ColumnType, IndexType>::uniqueInsert(const Field & x) override
+size_t ColumnUnique<ColumnType, IndexType>::uniqueInsert(const Field & x)
 {
     if (x.getType() == Field::Types::Null)
         return getNullValueIndex();
@@ -173,14 +173,14 @@ size_t ColumnUnique<ColumnType, IndexType>::uniqueInsert(const Field & x) overri
 }
 
 template <typename ColumnType, typename IndexType>
-size_t ColumnUnique<ColumnType, IndexType>::uniqueInsertFrom(const IColumn & src, size_t n) override
+size_t ColumnUnique<ColumnType, IndexType>::uniqueInsertFrom(const IColumn & src, size_t n)
 {
     auto ref = src.getDataAt(n);
     return uniqueInsertData(ref.data, ref.size);
 }
 
 template <typename ColumnType, typename IndexType>
-size_t ColumnUnique<ColumnType, IndexType>::uniqueInsertData(const char * data, size_t length) override
+size_t ColumnUnique<ColumnType, IndexType>::uniqueInsertData(const char * data, size_t length)
 {
     auto column = getRawColumnPtr();
 
@@ -199,7 +199,7 @@ size_t ColumnUnique<ColumnType, IndexType>::uniqueInsertData(const char * data, 
 }
 
 template <typename ColumnType, typename IndexType>
-size_t ColumnUnique<ColumnType, IndexType>::uniqueInsertDataWithTerminatingZero(const char * data, size_t length) override
+size_t ColumnUnique<ColumnType, IndexType>::uniqueInsertDataWithTerminatingZero(const char * data, size_t length)
 {
     if (std::is_same<ColumnType, ColumnString>::value)
         return uniqueInsertData(data, length - 1);
@@ -227,7 +227,7 @@ size_t ColumnUnique<ColumnType, IndexType>::uniqueInsertDataWithTerminatingZero(
 }
 
 template <typename ColumnType, typename IndexType>
-size_t ColumnUnique<ColumnType, IndexType>::uniqueDeserializeAndInsertFromArena(const char * pos, const char *& new_pos) override
+size_t ColumnUnique<ColumnType, IndexType>::uniqueDeserializeAndInsertFromArena(const char * pos, const char *& new_pos)
 {
     auto column = getRawColumnPtr();
     size_t prev_size = column->size();
@@ -247,7 +247,7 @@ size_t ColumnUnique<ColumnType, IndexType>::uniqueDeserializeAndInsertFromArena(
 }
 
 template <typename ColumnType, typename IndexType>
-ColumnPtr ColumnUnique<ColumnType, IndexType>::uniqueInsertRangeFrom(const IColumn & src, size_t start, size_t length) override
+ColumnPtr ColumnUnique<ColumnType, IndexType>::uniqueInsertRangeFrom(const IColumn & src, size_t start, size_t length)
 {
     if (!index)
         buildIndex();

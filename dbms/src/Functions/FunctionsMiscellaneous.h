@@ -41,7 +41,7 @@ class FunctionMakeDictionary: public IFunction
 {
 public:
     static constexpr auto name = "makeDictionary";
-    static FunctionPtr create(const Context & context) { return std::make_shared<FunctionMakeDictionary>(); }
+    static FunctionPtr create(const Context &) { return std::make_shared<FunctionMakeDictionary>(); }
 
     String getName() const override { return name; }
 
@@ -70,7 +70,7 @@ class FunctionDictionaryIndexes: public IFunction
 {
 public:
     static constexpr auto name = "dictionaryIndexes";
-    static FunctionPtr create(const Context & context) { return std::make_shared<FunctionDictionaryIndexes>(); }
+    static FunctionPtr create(const Context &) { return std::make_shared<FunctionDictionaryIndexes>(); }
 
     String getName() const override { return name; }
 
@@ -94,7 +94,7 @@ public:
         auto arg_num = arguments[0];
         const auto & arg = block.getByPosition(arg_num);
         auto & res = block.getByPosition(result);
-        res.column = typeid_cast<const ColumnWithDictionary *>(*arg.column)->getIndexesPtr();
+        res.column = typeid_cast<const ColumnWithDictionary *>(arg.column.get())->getIndexesPtr();
     }
 };
 
@@ -102,7 +102,7 @@ class FunctionDictionaryValues: public IFunction
 {
 public:
     static constexpr auto name = "dictionaryValues";
-    static FunctionPtr create(const Context & context) { return std::make_shared<FunctionDictionaryIndexes>(); }
+    static FunctionPtr create(const Context &) { return std::make_shared<FunctionDictionaryIndexes>(); }
 
     String getName() const override { return name; }
 
@@ -126,7 +126,7 @@ public:
         auto arg_num = arguments[0];
         const auto & arg = block.getByPosition(arg_num);
         auto & res = block.getByPosition(result);
-        const ColumnWithDictionary * column_with_dictionary = typeid_cast<const ColumnWithDictionary *>(*arg.column);
+        const ColumnWithDictionary * column_with_dictionary = typeid_cast<const ColumnWithDictionary *>(arg.column.get());
         res.column = column_with_dictionary->getUnique()->getNestedColumn()->cloneResized(arg.column->size());
     }
 };

@@ -127,10 +127,10 @@ public:
     }
 
     template <typename ... Args>
-    using DeserealizeFunctionPtr = void (IDataType::*)(IColumn &, ReadBuffer &, Args & ...) const;
+    using DeserealizeFunctionPtr = void (IDataType::*)(IColumn &, ReadBuffer &, Args ...) const;
 
     template <typename ... Args>
-    void deserializeImpl(IColumn & column, ReadBuffer & istr, DeserealizeFunctionPtr<Args ...> func, Args & ... args) const
+    void deserializeImpl(IColumn & column, ReadBuffer & istr, DeserealizeFunctionPtr<Args ...> func, Args ... args) const
     {
         auto & column_with_dictionary = getColumnWithDictionary(column);
         auto nested_unique = getNestedUniqueColumn(column_with_dictionary).assumeMutable();

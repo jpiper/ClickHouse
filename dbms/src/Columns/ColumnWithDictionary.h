@@ -95,12 +95,14 @@ public:
 
     MutableColumnPtr filter(const Filter & filt, ssize_t result_size_hint) const override
     {
-        return ColumnWithDictionary::create(column_unique, indexes->filter(filt, result_size_hint));
+        auto unique_ptr = column_unique;
+        return ColumnWithDictionary::create(std::move(unique_ptr)->mutate(), indexes->filter(filt, result_size_hint));
     }
 
     MutableColumnPtr permute(const Permutation & perm, size_t limit) const override
     {
-        return ColumnWithDictionary::create(column_unique, indexes->permute(perm, limit));
+        auto unique_ptr = column_unique;
+        return ColumnWithDictionary::create(std::move(unique_ptr)->mutate(), indexes->permute(perm, limit));
     }
 
     int compareAt(size_t n, size_t m, const IColumn & rhs, int nan_direction_hint) const override
@@ -145,7 +147,8 @@ public:
 
     MutableColumnPtr replicate(const Offsets & offsets) const override
     {
-        return ColumnWithDictionary::create(column_unique, indexes->replicate(offsets));
+        auto unique_ptr = column_unique;
+        return ColumnWithDictionary::create(std::move(unique_ptr)->mutate(), indexes->replicate(offsets));
     }
 
     std::vector<MutableColumnPtr> scatter(ColumnIndex num_columns, const Selector & selector) const override

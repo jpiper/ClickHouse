@@ -117,6 +117,8 @@ public:
 
     template <typename ... Args>
     using SerealizeFunctionPtr = void (IDataType::*)(const IColumn &, size_t, WriteBuffer &, Args & ...) const;
+
+    template <typename ... Args>
     void serializeImpl(const IColumn & column, size_t row_num, WriteBuffer & ostr, SerealizeFunctionPtr<Args ...> func, Args & ... args) const
     {
         auto & column_with_dictionary = getColumnWithDictionary(column);

@@ -239,7 +239,7 @@ private:
                            const IDataType * type)
                 : column(column), data_type_with_dictionary(data_type_with_dictionary), type(type) {}
 
-        template <typename T, typename>
+        template <typename T, size_t>
         void operator()()
         {
             if (typeid_cast<const ColumnVector<T> *>(type))

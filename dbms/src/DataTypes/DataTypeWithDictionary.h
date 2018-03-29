@@ -130,18 +130,18 @@ public:
     void deserializeImpl(IColumn & column, ReadBuffer & istr, DeserealizeFunctionPtr<Args ...> func, Args && ... args) const
     {
         auto & column_with_dictionary = getColumnWithDictionary(column);
-        auto & nested_unique = getNestedUniqueColumn(column_with_dictionary);
+        auto nested_unique = getNestedUniqueColumn(column_with_dictionary).assumeMutable();
 
         auto size = column_with_dictionary.size();
-        auto unique_size = nested_unique.size();
+        auto unique_size = nested_unique->size();
 
-        (dictionary_type.get()->*func)(nested_unique, istr, std::forward<Args>(args)...);
+        (dictionary_type.get()->*func)(*nested_unique, istr, std::forward<Args>(args)...);
 
         /// Note: Insertion into ColumnWithDictionary from it's nested column may cause insertion from column to itself.
         /// Generally it's wrong because column may reallocate memory before insertion.
-        column_with_dictionary.insertFrom(nested_unique, unique_size);
+        column_with_dictionary.insertFrom(*nested_unique, unique_size);
         if (column_with_dictionary.getIndexes()->getUInt(size) != unique_size)
-            nested_unique.popBack(1);
+            nested_unique->popBack(1);
     }
 
     void serializeBinary(const IColumn & column, size_t row_num, WriteBuffer & ostr) const override

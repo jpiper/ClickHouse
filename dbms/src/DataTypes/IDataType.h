@@ -88,7 +88,7 @@ public:
         /// Index of tuple element, starting at 1.
         String tuple_element_name;
 
-        explicit Substream(Type type) : type(type) {}
+        Substream(Type type) : type(type) {}
     };
 
     using SubstreamPath = std::vector<Substream>;

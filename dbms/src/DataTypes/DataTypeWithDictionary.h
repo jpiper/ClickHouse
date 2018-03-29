@@ -215,13 +215,13 @@ public:
     template <typename ColumnType>
     MutableColumnPtr createColumnImpl() const
     {
-        if (typeid_cast<const ColumnUInt8 *>(indexes_type.get()))
+        if (typeid_cast<const DataTypeUInt8 *>(indexes_type.get()))
             return createColumnImpl<ColumnType, UInt8>();
-        if (typeid_cast<const ColumnUInt16 *>(indexes_type.get()))
+        if (typeid_cast<const DataTypeUInt16 *>(indexes_type.get()))
             return createColumnImpl<ColumnType, UInt16>();
-        if (typeid_cast<const ColumnUInt32 *>(indexes_type.get()))
+        if (typeid_cast<const DataTypeUInt32 *>(indexes_type.get()))
             return createColumnImpl<ColumnType, UInt32>();
-        if (typeid_cast<const ColumnUInt64 *>(indexes_type.get()))
+        if (typeid_cast<const DataTypeUInt64 *>(indexes_type.get()))
             return createColumnImpl<ColumnType, UInt64>();
 
         throw Exception("The type of indexes must be unsigned integer, but got " + dictionary_type->getName(),

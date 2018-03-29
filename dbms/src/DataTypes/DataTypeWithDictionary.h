@@ -1,3 +1,4 @@
+#pragma once
 #include <Columns/ColumnWithDictionary.h>
 #include <Columns/ColumnUnique.h>
 #include <memory>

@@ -1,3 +1,4 @@
+#pragma once
 #include <Columns/IColumn.h>
 #include <Columns/IColumnUnique.h>
 
@@ -157,7 +158,7 @@ public:
         for (auto & column : columns)
         {
             auto unique_ptr = column_unique;
-            column = ColumnWithDictionary::create(std::move(unique_ptr)->mutate(), column);
+            column = ColumnWithDictionary::create(std::move(unique_ptr)->mutate(), std::move(column));
         }
 
         return columns;

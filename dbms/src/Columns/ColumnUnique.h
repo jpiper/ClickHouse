@@ -1,3 +1,4 @@
+#pragma once
 #include <Columns/IColumnUnique.h>
 #include <Common/HashTable/HashMap.h>
 #include <ext/range.h>

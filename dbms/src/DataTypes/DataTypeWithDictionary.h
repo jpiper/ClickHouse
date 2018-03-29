@@ -115,7 +115,7 @@ public:
         return *column_with_dictionary.getUnique()->getNestedColumn()->assumeMutable();
     }
 
-    using SerealizeFunctionPtr = void (IDataType::*)(const IColumn &, size_t, WriteBuffer &);
+    using SerealizeFunctionPtr = void (IDataType::*)(const IColumn &, size_t, WriteBuffer &) const;
     void serializeImpl(const IColumn & column, size_t row_num, WriteBuffer & ostr, SerealizeFunctionPtr func) const
     {
         auto & column_with_dictionary = getColumnWithDictionary(column);
@@ -124,7 +124,7 @@ public:
     }
 
     template <typename ... Args>
-    using DeserealizeFunctionPtr = void (IDataType::*)(IColumn &, ReadBuffer &, Args && ...);
+    using DeserealizeFunctionPtr = void (IDataType::*)(IColumn &, ReadBuffer &, Args && ...) const;
 
     template <typename ... Args>
     void deserializeImpl(IColumn & column, ReadBuffer & istr, DeserealizeFunctionPtr<Args ...> func, Args && ... args) const

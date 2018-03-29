@@ -115,19 +115,20 @@ public:
         return *column_with_dictionary.getUnique()->getNestedColumn()->assumeMutable();
     }
 
-    using SerealizeFunctionPtr = void (IDataType::*)(const IColumn &, size_t, WriteBuffer &) const;
-    void serializeImpl(const IColumn & column, size_t row_num, WriteBuffer & ostr, SerealizeFunctionPtr func) const
+    template <typename ... Args>
+    using SerealizeFunctionPtr = void (IDataType::*)(const IColumn &, size_t, WriteBuffer &, Args & ...) const;
+    void serializeImpl(const IColumn & column, size_t row_num, WriteBuffer & ostr, SerealizeFunctionPtr<Args ...> func, Args & ... args) const
     {
         auto & column_with_dictionary = getColumnWithDictionary(column);
         size_t unique_row_number = column_with_dictionary.getIndexes()->getUInt(row_num);
-        (dictionary_type.get()->*func)(*column_with_dictionary.getUnique(), unique_row_number, ostr);
+        (dictionary_type.get()->*func)(*column_with_dictionary.getUnique(), unique_row_number, ostr, std::forward<Args>(args)...);
     }
 
     template <typename ... Args>
-    using DeserealizeFunctionPtr = void (IDataType::*)(IColumn &, ReadBuffer &, Args && ...) const;
+    using DeserealizeFunctionPtr = void (IDataType::*)(IColumn &, ReadBuffer &, Args & ...) const;
 
     template <typename ... Args>
-    void deserializeImpl(IColumn & column, ReadBuffer & istr, DeserealizeFunctionPtr<Args ...> func, Args && ... args) const
+    void deserializeImpl(IColumn & column, ReadBuffer & istr, DeserealizeFunctionPtr<Args ...> func, Args & ... args) const
     {
         auto & column_with_dictionary = getColumnWithDictionary(column);
         auto nested_unique = getNestedUniqueColumn(column_with_dictionary).assumeMutable();
@@ -180,7 +181,7 @@ public:
 
     void deserializeTextCSV(IColumn & column, ReadBuffer & istr, const char delimiter) const override
     {
-        deserializeImpl<const char>(column, istr, &IDataType::deserializeTextCSV, delimiter);
+        deserializeImpl(column, istr, &IDataType::deserializeTextCSV, delimiter);
     }
 
     void serializeText(const IColumn & column, size_t row_num, WriteBuffer & ostr) const override

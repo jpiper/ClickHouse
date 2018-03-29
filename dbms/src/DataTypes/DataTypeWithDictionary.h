@@ -116,10 +116,10 @@ public:
     }
 
     template <typename ... Args>
-    using SerealizeFunctionPtr = void (IDataType::*)(const IColumn &, size_t, WriteBuffer &, Args & ...) const;
+    using SerealizeFunctionPtr = void (IDataType::*)(const IColumn &, size_t, WriteBuffer &, Args && ...) const;
 
     template <typename ... Args>
-    void serializeImpl(const IColumn & column, size_t row_num, WriteBuffer & ostr, SerealizeFunctionPtr<Args ...> func, Args & ... args) const
+    void serializeImpl(const IColumn & column, size_t row_num, WriteBuffer & ostr, SerealizeFunctionPtr<Args ...> func, Args && ... args) const
     {
         auto & column_with_dictionary = getColumnWithDictionary(column);
         size_t unique_row_number = column_with_dictionary.getIndexes()->getUInt(row_num);
@@ -127,10 +127,10 @@ public:
     }
 
     template <typename ... Args>
-    using DeserealizeFunctionPtr = void (IDataType::*)(IColumn &, ReadBuffer &, Args & ...) const;
+    using DeserealizeFunctionPtr = void (IDataType::*)(IColumn &, ReadBuffer &, Args && ...) const;
 
     template <typename ... Args>
-    void deserializeImpl(IColumn & column, ReadBuffer & istr, DeserealizeFunctionPtr<Args ...> func, Args & ... args) const
+    void deserializeImpl(IColumn & column, ReadBuffer & istr, DeserealizeFunctionPtr<Args ...> func, Args && ... args) const
     {
         auto & column_with_dictionary = getColumnWithDictionary(column);
         auto nested_unique = getNestedUniqueColumn(column_with_dictionary).assumeMutable();
@@ -183,7 +183,7 @@ public:
 
     void deserializeTextCSV(IColumn & column, ReadBuffer & istr, const char delimiter) const override
     {
-        deserializeImpl(column, istr, &IDataType::deserializeTextCSV, delimiter);
+        deserializeImpl(column, istr, &IDataType::deserializeTextCSV, std::move(delimiter));
     }
 
     void serializeText(const IColumn & column, size_t row_num, WriteBuffer & ostr) const override

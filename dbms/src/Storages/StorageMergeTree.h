@@ -106,8 +106,8 @@ private:
     /// For clearOldParts, clearOldTemporaryDirectories.
     AtomicStopwatch time_after_previous_cleanup;
 
-    MergeTreeData::DataParts currently_merging;
     std::mutex currently_merging_mutex;
+    MergeTreeData::DataParts currently_merging;
 
     Logger * log;
 

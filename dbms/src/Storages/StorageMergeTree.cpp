@@ -222,25 +222,6 @@ void StorageMergeTree::alter(
 }
 
 
-void StorageMergeTree::mutate(const MutationCommands & commands, const Context & context)
-{
-    UInt32 version = increment.get();
-    /// TODO: sync with merges.
-    MergeTreeMutation mutation(data, version, commands.commands);
-
-    MergeTreeData::DataPartsVector old_parts = data.getDataPartsVector();
-    for (const auto & old_part : old_parts)
-    {
-        if (old_part->info.min_block >= version || old_part->info.version >= version)
-            continue;
-
-        auto new_part = mutation.executeOnPart(old_part, context);
-        if (new_part)
-            data.renameTempPartAndReplace(new_part);
-    }
-}
-
-
 /// While exists, marks parts as 'currently_merging' and reserves free space on filesystem.
 /// It's possible to mark parts before.
 struct CurrentlyMergingPartsTagger
@@ -278,6 +259,58 @@ struct CurrentlyMergingPartsTagger
 };
 
 
+void StorageMergeTree::mutate(const MutationCommands & commands, const Context & context)
+{
+    UInt32 version  = increment.get();
+    MergeTreeMutation mutation(data, version, commands.commands);
+
+    size_t parts_changed = 0;
+    while (true)
+    {
+        std::optional<CurrentlyMergingPartsTagger> tagger;
+        MergeTreeData::DataPartPtr old_part;
+        bool some_locked = false;
+        {
+            std::lock_guard lock(currently_merging_mutex);
+
+            for (const auto & part : data.getDataPartsVector())
+            {
+                if (part->info.min_block >= version || part->info.version >= version)
+                    continue;
+
+                if (currently_merging.count(part))
+                {
+                    LOG_TRACE(log, "Part " << part->name << " is currently locked, will wait.");
+                    some_locked = true;
+                    continue;
+                }
+
+                old_part = part;
+                tagger.emplace({old_part}, old_part->bytes_on_disk, *this);
+                break;
+            }
+        }
+
+
+        if (old_part)
+        {
+            auto new_part = mutation.executeOnPart(old_part, context);
+            if (new_part)
+            {
+                data.renameTempPartAndReplace(new_part);
+                ++parts_changed;
+            }
+        }
+        else if (some_locked)
+            sleep(1);
+        else
+            break;
+    }
+
+    LOG_TRACE(mutation.log, "Finished, changed " << parts_changed << " parts.");
+}
+
+
 bool StorageMergeTree::merge(
     size_t aio_threshold,
     bool aggressive,
@@ -307,7 +340,8 @@ bool StorageMergeTree::merge(
 
         auto can_merge = [this] (const MergeTreeData::DataPartPtr & left, const MergeTreeData::DataPartPtr & right, String *)
         {
-            return !currently_merging.count(left) && !currently_merging.count(right);
+            return !currently_merging.count(left) && !currently_merging.count(right)
+                && left->info.version == right->info.version;
         };
 
         bool selected = false;

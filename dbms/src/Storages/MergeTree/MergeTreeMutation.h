@@ -22,6 +22,7 @@ private:
 
     std::vector<MutationCommand> commands;
 
+public:
     Logger * log;
 };
 

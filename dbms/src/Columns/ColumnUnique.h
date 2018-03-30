@@ -320,8 +320,6 @@ ColumnPtr ColumnUnique<ColumnType, IndexType>::uniqueInsertRangeFrom(const IColu
     auto & filtered_column = static_cast<ColumnType &>(*filtered_column_ptr);
 
     size_t filtered_size = filtered_column.size();
-
-    size_t prev_size = column->size();
     column->insertRangeFrom(filtered_column, 0, filtered_size);
 
     return positions_column;

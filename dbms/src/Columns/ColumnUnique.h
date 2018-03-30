@@ -108,10 +108,10 @@ private:
 
 namespace ZeroTraits
 {
-    template <typename ColumnType, typename IndexType>
+    template <typename ColumnType>
     inline bool check(StringRefWrapper<ColumnType> x) { return nullptr == x.column; }
 
-    template <typename ColumnType, typename IndexType>
+    template <typename ColumnType>
     inline void set(StringRefWrapper<ColumnType> & x) { x.column = nullptr; }
 };
 

@@ -18,7 +18,7 @@ class ColumnUnique final : public COWPtrHelper<IColumnUnique, ColumnUnique<Colum
 
 private:
     explicit ColumnUnique(MutableColumnPtr && holder);
-    explicit ColumnUnique(bool is_nullable) : column_holder(ColumnType::create(numSpecialValues())), is_nullable(is_nullable) {}
+    explicit ColumnUnique(bool is_nullable) : column_holder(ColumnType::create()->cloneResized(numSpecialValues())), is_nullable(is_nullable) {}
     ColumnUnique(const ColumnUnique & other) : column_holder(other.column_holder), is_nullable(other.is_nullable) {}
 
 public:

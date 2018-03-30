@@ -1,11 +1,10 @@
 #pragma once
 #include <Columns/IColumnUnique.h>
-#include <Common/HashTable/HashMap.h>
 #include <ext/range.h>
 #include <Common/typeid_cast.h>
 #include <Columns/ColumnVector.h>
 #include <Columns/ColumnNullable.h>
-#include "ColumnString.h"
+#include <Columns/ColumnString.h>
 
 class NullMap;
 
@@ -37,6 +36,9 @@ namespace ZeroTraits
     template <typename ColumnType>
     inline void set(StringRefWrapper<ColumnType> & x) { x.column = nullptr; }
 };
+
+
+#include <Common/HashTable/HashMap.h>
 
 namespace DB
 {

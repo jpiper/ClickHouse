@@ -256,7 +256,7 @@ public:
     {
         auto type = dictionary_type;
         if (type->isNullable())
-            type = static_cast<const DataTypeNullable &>(dictionary_type).getNestedType();
+            type = static_cast<const DataTypeNullable &>(*dictionary_type).getNestedType();
 
         if (type->isString())
             return createColumnImpl<ColumnString>();

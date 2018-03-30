@@ -99,7 +99,8 @@ private:
     size_t numSpecialValues() const { return is_nullable ? 2 : 1; }
 
     void buildIndex();
-    ColumnType * getRawColumnPtr() const { return static_cast<ColumnType *>(column_holder.get()); }
+    ColumnType * getRawColumnPtr() { return static_cast<ColumnType *>(column_holder->assumeMutable().get()); }
+    const ColumnType * getRawColumnPtr() const { return static_cast<ColumnType *>(column_holder.get()); }
     IndexType insert(const StringRefWrapper & ref, IndexType value);
 
 };

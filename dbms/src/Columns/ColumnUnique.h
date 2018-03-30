@@ -8,8 +8,7 @@
 #include "ColumnString.h"
 
 class NullMap;
-namespace DB
-{
+
 
 template <typename ColumnType>
 struct StringRefWrapper
@@ -29,6 +28,18 @@ struct StringRefWrapper
         return (column && column == other.column && row == other.row) || StringRef(*this) == other;
     }
 };
+
+namespace ZeroTraits
+{
+    template <typename ColumnType>
+    inline bool check(StringRefWrapper<ColumnType> x) { return nullptr == x.column; }
+
+    template <typename ColumnType>
+    inline void set(StringRefWrapper<ColumnType> & x) { x.column = nullptr; }
+};
+
+namespace DB
+{
 
 template <typename ColumnType, typename IndexType>
 class ColumnUnique final : public COWPtrHelper<IColumnUnique, ColumnUnique<ColumnType, IndexType>>
@@ -104,15 +115,6 @@ private:
     const ColumnType * getRawColumnPtr() const { return static_cast<ColumnType *>(column_holder.get()); }
     IndexType insert(const StringRefWrapper<ColumnType> & ref, IndexType value);
 
-};
-
-namespace ZeroTraits
-{
-    template <typename ColumnType>
-    inline bool check(StringRefWrapper<ColumnType> x) { return nullptr == x.column; }
-
-    template <typename ColumnType>
-    inline void set(StringRefWrapper<ColumnType> & x) { x.column = nullptr; }
 };
 
 template <typename ColumnType, typename IndexType>

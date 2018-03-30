@@ -288,7 +288,6 @@ ColumnPtr ColumnUnique<ColumnType, IndexType>::uniqueInsertRangeFrom(const IColu
         src_column = static_cast<const ColumnType *>(&src);
 
     auto column = getRawColumnPtr();
-    IColumn::Filter filter(src_column->size(), 0);
     auto positions_column = ColumnVector<IndexType>::create(length);
     auto & positions = positions_column->getData();
 
@@ -306,21 +305,15 @@ ColumnPtr ColumnUnique<ColumnType, IndexType>::uniqueInsertRangeFrom(const IColu
             auto it = index->find(StringRefWrapper<ColumnType>(src_column, row));
             if (it == index->end())
             {
-                filter[row] = 1;
                 positions[i] = next_position;
-                (*index)[StringRefWrapper<ColumnType>(column, row)] = next_position;
+                column->insertData(src_column->getDataAt(row))
+                (*index)[StringRefWrapper<ColumnType>(column, next_position)] = next_position;
                 ++next_position;
             }
             else
                 positions[i] = it->second;
         }
     }
-
-    auto filtered_column_ptr = src_column->filter(filter, 0);
-    auto & filtered_column = static_cast<ColumnType &>(*filtered_column_ptr);
-
-    size_t filtered_size = filtered_column.size();
-    column->insertRangeFrom(filtered_column, 0, filtered_size);
 
     return positions_column;
 }

@@ -212,7 +212,7 @@ public:
     template <typename ColumnType, typename IndexType>
     MutableColumnPtr createColumnImpl() const
     {
-        return ColumnWithDictionary::create(ColumnUnique<ColumnType, IndexType>::create(dictionary_type),
+        return ColumnWithDictionary::create(ColumnUnique<ColumnType, IndexType>::create(removeNullable(dictionary_type)),
                                             indexes_type->createColumn());
     }
 

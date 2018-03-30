@@ -1,5 +1,6 @@
 #pragma once
 #include <Columns/IColumnUnique.h>
+#include <Common/HashTable/HashMap.h>
 #include <ext/range.h>
 #include <Common/typeid_cast.h>
 #include <Columns/ColumnVector.h>
@@ -19,6 +20,8 @@ struct StringRefWrapper
 
     StringRefWrapper(const ColumnType * column, size_t row) : column(column), row(row) {}
     StringRefWrapper(StringRef ref) : ref(ref) {}
+    StringRefWrapper(const StringRefWrapper & other) = default;
+    StringRefWrapper() {}
 
     operator StringRef() const { return column ? column->getDataAt(row) : ref; }
 
@@ -37,8 +40,6 @@ namespace ZeroTraits
     inline void set(StringRefWrapper<ColumnType> & x) { x.column = nullptr; }
 };
 
-
-#include <Common/HashTable/HashMap.h>
 
 namespace DB
 {

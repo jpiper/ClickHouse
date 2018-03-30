@@ -56,7 +56,7 @@ private:
     explicit ColumnUnique(MutableColumnPtr && holder);
     explicit ColumnUnique(const DataTypePtr & type) : is_nullable(type->isNullable())
     {
-        column_holder = type->createColumn()->cloneResized(numSpecialValues());
+        column_holder = removeNullable(type)->createColumn()->cloneResized(numSpecialValues());
     }
     ColumnUnique(const ColumnUnique & other) : column_holder(other.column_holder), is_nullable(other.is_nullable) {}
 

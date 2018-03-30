@@ -18,7 +18,10 @@ class ColumnUnique final : public COWPtrHelper<IColumnUnique, ColumnUnique<Colum
 
 private:
     explicit ColumnUnique(MutableColumnPtr && holder);
-    explicit ColumnUnique(bool is_nullable) : column_holder(ColumnType::create()->cloneResized(numSpecialValues())), is_nullable(is_nullable) {}
+    explicit ColumnUnique(const DataTypePtr & type) : is_nullable(type->isNullable())
+    {
+        column_holder = type->createColumn()->cloneResized(numSpecialValues());
+    }
     ColumnUnique(const ColumnUnique & other) : column_holder(other.column_holder), is_nullable(other.is_nullable) {}
 
 public:
@@ -160,7 +163,7 @@ size_t ColumnUnique<ColumnType, IndexType>::uniqueInsert(const Field & x)
         return getNullValueIndex();
 
     auto column = getRawColumnPtr();
-    IndexType prev_size = static_cast<IndexType>(column->size());
+    auto prev_size = static_cast<IndexType>(column->size());
 
     if ((*column)[getDefaultValueIndex()] == x)
         return getDefaultValueIndex();
@@ -181,38 +184,38 @@ size_t ColumnUnique<ColumnType, IndexType>::uniqueInsertFrom(const IColumn & src
 }
 
 template <typename ColumnType, typename IndexType>
-size_t ColumnUnique<ColumnType, IndexType>::uniqueInsertData(const char * data, size_t length)
+size_t ColumnUnique<ColumnType, IndexType>::uniqueInsertData(const char * pos, size_t length)
 {
     auto column = getRawColumnPtr();
 
-    if (column->getDataAt(getDefaultValueIndex()) == StringRef(data, length))
+    if (column->getDataAt(getDefaultValueIndex()) == StringRef(pos, length))
         return getDefaultValueIndex();
 
-    IndexType size = static_cast<IndexType>(column->size());
+    auto size = static_cast<IndexType>(column->size());
 
-    if (!index->has(StringRefWrapper(StringRef(data, length))))
+    if (!index->has(StringRefWrapper(StringRef(pos, length))))
     {
-        column->insertData(data, length);
-        return static_cast<size_t>(insert(StringRefWrapper(StringRef(data, length)), size));
+        column->insertData(pos, length);
+        return static_cast<size_t>(insert(StringRefWrapper(StringRef(pos, length)), size));
     }
 
     return size;
 }
 
 template <typename ColumnType, typename IndexType>
-size_t ColumnUnique<ColumnType, IndexType>::uniqueInsertDataWithTerminatingZero(const char * data, size_t length)
+size_t ColumnUnique<ColumnType, IndexType>::uniqueInsertDataWithTerminatingZero(const char * pos, size_t length)
 {
     if (std::is_same<ColumnType, ColumnString>::value)
-        return uniqueInsertData(data, length - 1);
+        return uniqueInsertData(pos, length - 1);
 
     if (column_holder->valuesHaveFixedSize())
-        return uniqueInsertData(data, length);
+        return uniqueInsertData(pos, length);
 
     /// Don't know if data actually has terminating zero. So, insert it firstly.
 
     auto column = getRawColumnPtr();
     size_t prev_size = column->size();
-    column->insertDataWithTerminatingZero(data, length);
+    column->insertDataWithTerminatingZero(pos, length);
 
     if (column->compareAt(getDefaultValueIndex(), prev_size, *column, 1) == 0)
     {
@@ -220,11 +223,11 @@ size_t ColumnUnique<ColumnType, IndexType>::uniqueInsertDataWithTerminatingZero(
         return getDefaultValueIndex();
     }
 
-    auto pos = insert(StringRefWrapper(column, prev_size), prev_size);
-    if (pos != prev_size)
+    auto position = insert(StringRefWrapper(column, prev_size), prev_size);
+    if (position != prev_size)
         column->popBack(1);
 
-    return static_cast<size_t>(pos);
+    return static_cast<size_t>(position);
 }
 
 template <typename ColumnType, typename IndexType>

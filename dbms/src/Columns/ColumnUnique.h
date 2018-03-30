@@ -306,7 +306,8 @@ ColumnPtr ColumnUnique<ColumnType, IndexType>::uniqueInsertRangeFrom(const IColu
             if (it == index->end())
             {
                 positions[i] = next_position;
-                column->insertData(src_column->getDataAt(row))
+                auto ref = src_column->getDataAt(row);
+                column->insertData(ref.data, ref.size);
                 (*index)[StringRefWrapper<ColumnType>(column, next_position)] = next_position;
                 ++next_position;
             }

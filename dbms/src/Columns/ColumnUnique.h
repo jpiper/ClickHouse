@@ -23,7 +23,7 @@ struct StringRefWrapper
 
     operator StringRef() const { return column ? column->getDataAt(row) : ref; }
 
-    bool operator==(const StringRefWrapper<ColumnType> & other)
+    bool operator==(const StringRefWrapper<ColumnType> & other) const
     {
         return (column && column == other.column && row == other.row) || StringRef(*this) == other;
     }
@@ -32,7 +32,7 @@ struct StringRefWrapper
 namespace ZeroTraits
 {
     template <typename ColumnType>
-    inline bool check(StringRefWrapper<ColumnType> x) { return nullptr == x.column; }
+    inline bool check(const StringRefWrapper<ColumnType> x) { return nullptr == x.column; }
 
     template <typename ColumnType>
     inline void set(StringRefWrapper<ColumnType> & x) { x.column = nullptr; }

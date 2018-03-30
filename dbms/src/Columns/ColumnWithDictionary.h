@@ -185,11 +185,11 @@ public:
 
     IColumnUnique * getUnique() { return static_cast<IColumnUnique *>(column_unique->assumeMutable().get()); }
     const IColumnUnique * getUnique() const { return static_cast<const IColumnUnique *>(column_unique->assumeMutable().get()); }
-    ColumnPtr getUniquePtr() const { return column_unique; }
+    const ColumnPtr & getUniquePtr() const { return column_unique; }
 
     IColumn * getIndexes() { return indexes->assumeMutable().get(); }
     const IColumn * getIndexes() const { return indexes.get(); }
-    ColumnPtr getIndexesPtr() const { return indexes; }
+    const ColumnPtr & getIndexesPtr() const { return indexes; }
 
 private:
     ColumnPtr column_unique;

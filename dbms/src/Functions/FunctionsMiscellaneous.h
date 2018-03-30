@@ -102,7 +102,7 @@ class FunctionDictionaryValues: public IFunction
 {
 public:
     static constexpr auto name = "dictionaryValues";
-    static FunctionPtr create(const Context &) { return std::make_shared<FunctionDictionaryIndexes>(); }
+    static FunctionPtr create(const Context &) { return std::make_shared<FunctionDictionaryValues>(); }
 
     String getName() const override { return name; }
 
@@ -126,7 +126,7 @@ public:
         auto arg_num = arguments[0];
         const auto & arg = block.getByPosition(arg_num);
         auto & res = block.getByPosition(result);
-        const ColumnWithDictionary * column_with_dictionary = typeid_cast<const ColumnWithDictionary *>(arg.column.get());
+        const auto * column_with_dictionary = typeid_cast<const ColumnWithDictionary *>(arg.column.get());
         res.column = column_with_dictionary->getUnique()->getNestedColumn()->cloneResized(arg.column->size());
     }
 };

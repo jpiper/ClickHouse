@@ -11,6 +11,25 @@ class NullMap;
 namespace DB
 {
 
+template <typename ColumnType>
+struct StringRefWrapper
+{
+    const ColumnType * column = nullptr;
+    size_t row = 0;
+
+    StringRef ref;
+
+    StringRefWrapper(const ColumnType * column, size_t row) : column(column), row(row) {}
+    StringRefWrapper(StringRef ref) : ref(ref) {}
+
+    operator StringRef() const { return column ? column->getDataAt(row) : ref; }
+
+    bool operator==(const StringRefWrapper<ColumnType> & other)
+    {
+        return (column && column == other.column && row == other.row) || StringRef(*this) == other;
+    }
+};
+
 template <typename ColumnType, typename IndexType>
 class ColumnUnique final : public COWPtrHelper<IColumnUnique, ColumnUnique<ColumnType, IndexType>>
 {
@@ -70,25 +89,7 @@ public:
 
 private:
 
-    struct StringRefWrapper
-    {
-        const ColumnType * column = nullptr;
-        size_t row = 0;
-
-        StringRef ref;
-
-        StringRefWrapper(const ColumnType * column, size_t row) : column(column), row(row) {}
-        StringRefWrapper(StringRef ref) : ref(ref) {}
-
-        operator StringRef() const { return column ? column->getDataAt(row) : ref; }
-
-        bool operator==(const StringRefWrapper & other)
-        {
-            return (column && column == other.column && row == other.row) || StringRef(*this) == other;
-        }
-    };
-
-    using IndexMapType = HashMap<StringRefWrapper, IndexType, StringRefHash>;
+    using IndexMapType = HashMap<StringRefWrapper<ColumnType>, IndexType, StringRefHash>;
 
     ColumnPtr column_holder;
     /// Lazy initialized.
@@ -101,8 +102,17 @@ private:
     void buildIndex();
     ColumnType * getRawColumnPtr() { return static_cast<ColumnType *>(column_holder->assumeMutable().get()); }
     const ColumnType * getRawColumnPtr() const { return static_cast<ColumnType *>(column_holder.get()); }
-    IndexType insert(const StringRefWrapper & ref, IndexType value);
+    IndexType insert(const StringRefWrapper<ColumnType> & ref, IndexType value);
 
+};
+
+namespace ZeroTraits
+{
+    template <typename ColumnType, typename IndexType>
+    inline bool check(StringRefWrapper<ColumnType> x) { return nullptr == x.column; }
+
+    template <typename ColumnType, typename IndexType>
+    inline void set(StringRefWrapper<ColumnType> & x) { x.column = nullptr; }
 };
 
 template <typename ColumnType, typename IndexType>
@@ -136,12 +146,12 @@ void ColumnUnique<ColumnType, IndexType>::buildIndex()
 
     for (auto row : ext::range(numSpecialValues(), column->size()))
     {
-        (*index)[StringRefWrapper(column, row)] = row;
+        (*index)[StringRefWrapper<ColumnType>(column, row)] = row;
     }
 }
 
 template <typename ColumnType, typename IndexType>
-IndexType ColumnUnique<ColumnType, IndexType>::insert(const StringRefWrapper & ref, IndexType value)
+IndexType ColumnUnique<ColumnType, IndexType>::insert(const StringRefWrapper<ColumnType> & ref, IndexType value)
 {
     if (!index)
         buildIndex();
@@ -170,7 +180,7 @@ size_t ColumnUnique<ColumnType, IndexType>::uniqueInsert(const Field & x)
         return getDefaultValueIndex();
 
     column->insert(x);
-    auto pos = insert(StringRefWrapper(column, prev_size), prev_size);
+    auto pos = insert(StringRefWrapper<ColumnType>(column, prev_size), prev_size);
     if (pos != prev_size)
         column->popBack(1);
 
@@ -194,10 +204,10 @@ size_t ColumnUnique<ColumnType, IndexType>::uniqueInsertData(const char * pos, s
 
     auto size = static_cast<IndexType>(column->size());
 
-    if (!index->has(StringRefWrapper(StringRef(pos, length))))
+    if (!index->has(StringRefWrapper<ColumnType>(StringRef(pos, length))))
     {
         column->insertData(pos, length);
-        return static_cast<size_t>(insert(StringRefWrapper(StringRef(pos, length)), size));
+        return static_cast<size_t>(insert(StringRefWrapper<ColumnType>(StringRef(pos, length)), size));
     }
 
     return size;
@@ -224,7 +234,7 @@ size_t ColumnUnique<ColumnType, IndexType>::uniqueInsertDataWithTerminatingZero(
         return getDefaultValueIndex();
     }
 
-    auto position = insert(StringRefWrapper(column, prev_size), prev_size);
+    auto position = insert(StringRefWrapper<ColumnType>(column, prev_size), prev_size);
     if (position != prev_size)
         column->popBack(1);
 
@@ -244,7 +254,7 @@ size_t ColumnUnique<ColumnType, IndexType>::uniqueDeserializeAndInsertFromArena(
         return getDefaultValueIndex();
     }
 
-    auto index_pos = insert(StringRefWrapper(column, prev_size), prev_size);
+    auto index_pos = insert(StringRefWrapper<ColumnType>(column, prev_size), prev_size);
     if (index_pos != prev_size)
         column->popBack(1);
 
@@ -285,7 +295,7 @@ ColumnPtr ColumnUnique<ColumnType, IndexType>::uniqueInsertRangeFrom(const IColu
             positions[i] = getNullValueIndex();
         else
         {
-            auto it = index->find(StringRefWrapper(src_column, row));
+            auto it = index->find(StringRefWrapper<ColumnType>(src_column, row));
             if (it == index->end())
             {
                 filter[row] = 1;
@@ -308,7 +318,7 @@ ColumnPtr ColumnUnique<ColumnType, IndexType>::uniqueInsertRangeFrom(const IColu
     if (filtered_size)
     {
         for (auto row : ext::range(prev_size, prev_size + filtered_size))
-            (*index)[StringRefWrapper(column, row)] = row;
+            (*index)[StringRefWrapper<ColumnType>(column, row)] = row;
     }
 
     return positions_column;

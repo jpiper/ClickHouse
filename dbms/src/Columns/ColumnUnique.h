@@ -21,6 +21,8 @@ struct StringRefWrapper
     StringRefWrapper(const ColumnType * column, size_t row) : column(column), row(row) {}
     StringRefWrapper(StringRef ref) : ref(ref) {}
     StringRefWrapper(const StringRefWrapper & other) = default;
+    const StringRefWrapper & operator =(int) { column = nullptr; return *this; }
+    bool operator ==(int) { return nullptr == x.column; }
     StringRefWrapper() {}
 
     operator StringRef() const { return column ? column->getDataAt(row) : ref; }
@@ -29,6 +31,7 @@ struct StringRefWrapper
     {
         return (column && column == other.column && row == other.row) || StringRef(*this) == other;
     }
+
 };
 
 namespace ZeroTraits

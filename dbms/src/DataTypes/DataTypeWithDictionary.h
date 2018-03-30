@@ -35,9 +35,13 @@ public:
             throw Exception("Index type of DataTypeWithDictionary must be unsigned integer, but got "
                             + indexes_type->getName(), ErrorCodes::ILLEGAL_TYPE_OF_ARGUMENT);
 
-        if (!dictionary_type->isStringOrFixedString()
-            && !dictionary_type->isDateOrDateTime()
-            && !dictionary_type->isNumber())
+        auto inner_type = dictionary_type;
+        if (dictionary_type->isNullable())
+            inner_type = static_cast<const DataTypeNullable &>(*dictionary_type).getNestedType();
+
+        if (!inner_type->isStringOrFixedString()
+            && !inner_type->isDateOrDateTime()
+            && !inner_type->isNumber())
             throw Exception("DataTypeWithDictionary is supported only for numbers, strings, Date or DateTime, but got "
                             + dictionary_type->getName(), ErrorCodes::ILLEGAL_TYPE_OF_ARGUMENT);
     }

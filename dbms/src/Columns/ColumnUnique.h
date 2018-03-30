@@ -278,7 +278,7 @@ ColumnPtr ColumnUnique<ColumnType, IndexType>::uniqueInsertRangeFrom(const IColu
     const ColumnType * src_column;
     const NullMap * null_map = nullptr;
 
-    if (src_column->isColumnNullable())
+    if (src.isColumnNullable())
     {
         auto nullable_column = static_cast<const ColumnNullable *>(&src);
         src_column = static_cast<const ColumnType *>(&nullable_column->getNestedColumn());

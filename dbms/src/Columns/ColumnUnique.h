@@ -259,7 +259,7 @@ ColumnPtr ColumnUnique<ColumnType, IndexType>::uniqueInsertRangeFrom(const IColu
     const ColumnType * src_column;
     const NullMap * null_map = nullptr;
 
-    if (src_column->isNullable())
+    if (src_column->isColumnNullable())
     {
         auto nullable_column = static_cast<const ColumnNullable *>(&src);
         src_column = static_cast<const ColumnType *>(&nullable_column->getNestedColumn());
@@ -271,7 +271,7 @@ ColumnPtr ColumnUnique<ColumnType, IndexType>::uniqueInsertRangeFrom(const IColu
     auto column = getRawColumnPtr();
     IColumn::Filter filter(src_column->size(), 0);
     auto positions_column = ColumnVector<IndexType>::create(length);
-    auto & positions = positions_column.getData();
+    auto & positions = positions_column->getData();
 
     size_t next_position = column->size();
     for (auto i : ext::range(0, length))
@@ -284,7 +284,7 @@ ColumnPtr ColumnUnique<ColumnType, IndexType>::uniqueInsertRangeFrom(const IColu
             positions[i] = getNullValueIndex();
         else
         {
-            auto it = index->find(StringRefWrapper(&src_column, row));
+            auto it = index->find(StringRefWrapper(src_column, row));
             if (it == index->end())
             {
                 filter[row] = 1;
@@ -296,7 +296,7 @@ ColumnPtr ColumnUnique<ColumnType, IndexType>::uniqueInsertRangeFrom(const IColu
         }
     }
 
-    auto filtered_column_ptr = src_column->filter(filter);
+    auto filtered_column_ptr = src_column->filter(filter, 0);
     auto filtered_column = static_cast<ColumnType &>(*filtered_column_ptr);
 
     size_t filtered_size = filtered_column->size();

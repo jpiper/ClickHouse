@@ -308,6 +308,7 @@ ColumnPtr ColumnUnique<ColumnType, IndexType>::uniqueInsertRangeFrom(const IColu
             {
                 filter[row] = 1;
                 positions[i] = next_position;
+                (*index)[StringRefWrapper<ColumnType>(column, row)] = next_position;
                 ++next_position;
             }
             else
@@ -322,12 +323,6 @@ ColumnPtr ColumnUnique<ColumnType, IndexType>::uniqueInsertRangeFrom(const IColu
 
     size_t prev_size = column->size();
     column->insertRangeFrom(filtered_column, 0, filtered_size);
-
-    if (filtered_size)
-    {
-        for (auto row : ext::range(prev_size, prev_size + filtered_size))
-            (*index)[StringRefWrapper<ColumnType>(column, row)] = row;
-    }
 
     return positions_column;
 }
